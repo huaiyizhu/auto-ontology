@@ -423,3 +423,16 @@ def test_first_attempt_success_does_not_sleep() -> None:
 
     assert result is not None and not result.empty
     assert slept == []
+
+
+@pytest.mark.parametrize("kind,expected", [("query", "query"), ("passage", "document")])
+def test_azure_cohere_request_uses_supported_fields(
+    endpoint, monkeypatch, kind, expected
+):
+    monkeypatch.setenv("EMBED_API_STYLE", "azure-cohere")
+    seen = endpoint(_ok)
+    embed_texts(["hello"], _params(), kind)
+    body = json.loads(seen[0].content)
+    assert body["input_type"] == expected
+    assert "truncate" not in body
+    assert "modality" not in body

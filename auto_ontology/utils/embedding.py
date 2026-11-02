@@ -19,6 +19,7 @@ from __future__ import annotations
 import itertools
 import logging
 import math
+import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -166,15 +167,20 @@ def embed_texts(
     batches = list(itertools.batched(to_send, max(1, params.inference_batch_size)))
 
     def _embed_batch(indices: tuple[int, ...]) -> None:
+        extra_body = {
+            "input_type": input_type,
+            "truncate": "END",
+            "modality": params.embed_modality,
+        }
+        if os.environ.get("EMBED_API_STYLE") == "azure-cohere":
+            extra_body = {
+                "input_type": "query" if input_type == "query" else "document"
+            }
         response = client.embeddings.create(
             model=params.model_name,
             input=[stripped[i] for i in indices],
             encoding_format="float",
-            extra_body={
-                "input_type": input_type,
-                "truncate": "END",
-                "modality": params.embed_modality,
-            },
+            extra_body=extra_body,
             timeout=timeout or params.request_timeout_s,
             extra_headers=None if params.api_key else _NO_AUTH,
         )

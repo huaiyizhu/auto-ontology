@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import psycopg
+from dotenv import load_dotenv
 
 logger = logging.getLogger("dev_tools.fixtures.seed_local_postgres")
 
@@ -130,6 +131,8 @@ def _apply_sql(fixture: Fixture) -> None:
 
 
 def seed() -> None:
+    # Both CLI entry points use this function. Preserve exported overrides.
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
     admin_params = _conn_params(
         os.environ.get("POSTGRES_ADMIN_DB", DEFAULT_POSTGRES_ADMIN_DB),
     )

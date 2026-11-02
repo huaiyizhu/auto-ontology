@@ -22,6 +22,8 @@ Two deliberate choices:
 
 Usage::
 
+    # Configuration is loaded from the repository-root .env.
+    # Exported environment variables take precedence.
     export POSTGRES_HOST=... POSTGRES_PORT=... POSTGRES_USER=... POSTGRES_PASSWORD=...
     export CONNECTION_STRINGS="postgresql://.../pagila,sqlite:////abs/path/chinook.sqlite"
     uv run --no-sync python -m dev_tools.fixtures.seed_graph_fixture --reset
@@ -32,7 +34,10 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+from pathlib import Path
 from typing import Any
+
+from dotenv import load_dotenv
 
 logger = logging.getLogger("dev_tools.fixtures.seed_graph_fixture")
 
@@ -482,6 +487,9 @@ def main() -> None:
         help="delete every node first (the fixture must be built from empty)",
     )
     args = parser.parse_args()
+
+    # Load before service imports initialise model and database configuration.
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
 
     logging.basicConfig(
         level=logging.INFO,
